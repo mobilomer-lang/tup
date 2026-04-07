@@ -53,9 +53,15 @@ async function initDb() {
       phone TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       role TEXT DEFAULT 'customer', -- 'customer', 'courier', 'admin', 'super_admin'
+      is_active BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Migration: Ensure is_active exists in users
+  try {
+    await db.execute("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1");
+  } catch (e) {}
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS settings (
@@ -318,6 +324,22 @@ app.post("/api/auth/register", async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   const userEmail = email || `${phone}@sutupsiparis.com`;
   try {
+    // Check for existing soft-deleted user
+    const existing = await db.execute({
+      sql: "SELECT id FROM users WHERE phone = ?",
+      args: [phone ?? null]
+    });
+
+    if (existing.rows.length > 0) {
+      const userId = Number(existing.rows[0].id);
+      await db.execute({
+        sql: "UPDATE users SET name = ?, password = ?, role = ?, email = ?, is_active = 1 WHERE id = ?",
+        args: [name ?? null, hashedPassword ?? null, role || 'customer', userEmail, userId]
+      });
+      const token = jwt.sign({ id: userId, phone, role: role || 'customer' }, JWT_SECRET);
+      return res.json({ token, user: { id: userId, name, phone, role: role || 'customer', email: userEmail } });
+    }
+
     const result = await db.execute({
       sql: "INSERT INTO users (name, phone, password, role, email) VALUES (?, ?, ?, ?, ?)",
       args: [name ?? null, phone ?? null, hashedPassword ?? null, role || 'customer', userEmail]
@@ -326,6 +348,7 @@ app.post("/api/auth/register", async (req, res) => {
     const token = jwt.sign({ id: userId, phone, role: role || 'customer' }, JWT_SECRET);
     res.json({ token, user: { id: userId, name, phone, role: role || 'customer', email: userEmail } });
   } catch (e) {
+    console.error("Registration error:", e);
     res.status(400).json({ error: "Phone number or email already exists" });
   }
 });
@@ -333,7 +356,7 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   const { phone, password } = req.body;
   const result = await db.execute({
-    sql: "SELECT * FROM users WHERE phone = ?",
+    sql: "SELECT * FROM users WHERE phone = ? AND is_active = 1",
     args: [phone ?? null]
   });
   const user = result.rows[0];
@@ -341,7 +364,7 @@ app.post("/api/auth/login", async (req, res) => {
     const token = jwt.sign({ id: user.id, phone: user.phone, role: user.role }, JWT_SECRET);
     res.json({ token, user: { id: user.id, name: user.name, phone: user.phone, role: user.role } });
   } else {
-    res.status(401).json({ error: "Invalid credentials" });
+    res.status(401).json({ error: "Invalid credentials or account inactive" });
   }
 });
 
@@ -671,7 +694,7 @@ app.post("/api/admin/settings", authenticateToken, authorize(["admin", "super_ad
 
 // Admin Users (Customers)
 app.get("/api/admin/users", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  const result = await db.execute("SELECT id, name, phone, role, created_at FROM users WHERE role = 'customer'");
+  const result = await db.execute("SELECT id, name, phone, role, created_at FROM users WHERE role = 'customer' AND is_active = 1");
   res.json(result.rows);
 });
 
@@ -686,7 +709,7 @@ app.put("/api/admin/users/:id", authenticateToken, authorize(["admin", "super_ad
 
 // Admin Couriers
 app.get("/api/admin/couriers", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  const result = await db.execute("SELECT id, name, phone, role, created_at FROM users WHERE role = 'courier'");
+  const result = await db.execute("SELECT id, name, phone, role, created_at FROM users WHERE role = 'courier' AND is_active = 1");
   res.json(result.rows);
 });
 
@@ -695,6 +718,21 @@ app.post("/api/admin/couriers", authenticateToken, authorize(["admin", "super_ad
   const hashedPassword = await bcrypt.hash(password || '123456', 10);
   const courierEmail = email || `${phone}@kurye.sutupsiparis.com`;
   try {
+    // Check for existing soft-deleted user
+    const existing = await db.execute({
+      sql: "SELECT id FROM users WHERE phone = ?",
+      args: [phone ?? null]
+    });
+
+    if (existing.rows.length > 0) {
+      const userId = Number(existing.rows[0].id);
+      await db.execute({
+        sql: "UPDATE users SET name = ?, password = ?, role = 'courier', email = ?, is_active = 1 WHERE id = ?",
+        args: [name ?? null, hashedPassword, courierEmail, userId]
+      });
+      return res.json({ success: true });
+    }
+
     await db.execute({
       sql: "INSERT INTO users (name, phone, password, role, email) VALUES (?, ?, ?, 'courier', ?)",
       args: [name ?? null, phone ?? null, hashedPassword, courierEmail]
@@ -722,19 +760,62 @@ app.put("/api/admin/couriers/:id", authenticateToken, authorize(["admin", "super
 });
 
 app.delete("/api/admin/users/:id", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  await db.execute({
-    sql: "DELETE FROM users WHERE id = ? AND role = 'customer'",
-    args: [req.params.id]
-  });
-  res.json({ success: true });
+  try {
+    // Check if user has orders
+    const orderCheck = await db.execute({
+      sql: "SELECT COUNT(*) as count FROM orders WHERE user_id = ?",
+      args: [req.params.id]
+    });
+
+    if (Number(orderCheck.rows[0].count) > 0) {
+      // Soft delete if user has orders
+      await db.execute({
+        sql: "UPDATE users SET is_active = 0 WHERE id = ? AND role = 'customer'",
+        args: [req.params.id]
+      });
+    } else {
+      // Hard delete if no orders, but delete related data first
+      await db.execute({ sql: "DELETE FROM addresses WHERE user_id = ?", args: [req.params.id] });
+      await db.execute({ sql: "DELETE FROM user_deposits WHERE user_id = ?", args: [req.params.id] });
+      await db.execute({ sql: "DELETE FROM deposit_movements WHERE user_id = ?", args: [req.params.id] });
+      await db.execute({
+        sql: "DELETE FROM users WHERE id = ? AND role = 'customer'",
+        args: [req.params.id]
+      });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    console.error("User deletion error:", e);
+    res.status(500).json({ error: "Kullanıcı silinemedi" });
+  }
 });
 
 app.delete("/api/admin/couriers/:id", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  await db.execute({
-    sql: "DELETE FROM users WHERE id = ? AND role = 'courier'",
-    args: [req.params.id]
-  });
-  res.json({ success: true });
+  try {
+    // Check if courier has orders
+    const orderCheck = await db.execute({
+      sql: "SELECT COUNT(*) as count FROM orders WHERE courier_id = ?",
+      args: [req.params.id]
+    });
+
+    if (Number(orderCheck.rows[0].count) > 0) {
+      // Soft delete if courier has orders
+      await db.execute({
+        sql: "UPDATE users SET is_active = 0 WHERE id = ? AND role = 'courier'",
+        args: [req.params.id]
+      });
+    } else {
+      // Hard delete if no orders
+      await db.execute({
+        sql: "DELETE FROM users WHERE id = ? AND role = 'courier'",
+        args: [req.params.id]
+      });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Courier deletion error:", e);
+    res.status(500).json({ error: "Kurye silinemedi" });
+  }
 });
 
 // Admin Products
