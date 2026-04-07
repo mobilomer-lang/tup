@@ -1,0 +1,7 @@
+{
+  "name": "Github_canli: Su ve Tüp Sipariş Uygulaması",
+  "description": "Modern, mobil öncelikli müşteri, kurye ve admin panelli su ve tüp sipariş platformu.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
