@@ -147,7 +147,8 @@ export default function App() {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (currentUser?: User | null) => {
+    const activeUser = currentUser !== undefined ? currentUser : user;
     try {
       const [p, s] = await Promise.all([
         api.products.list(),
@@ -155,7 +156,7 @@ export default function App() {
       ]);
       setProducts(p);
       setSettings(s);
-      if (user) {
+      if (activeUser) {
         const a = await api.addresses.list();
         setAddresses(a);
       }
@@ -171,7 +172,7 @@ export default function App() {
     localStorage.setItem('user', JSON.stringify(u));
     localStorage.setItem('token', token);
     setShowAuth(false);
-    loadData();
+    loadData(u);
     if (u.role === 'courier') setView('courier');
     else if (u.role === 'admin' || u.role === 'super_admin') setView('admin');
     else setView('home');
@@ -181,6 +182,7 @@ export default function App() {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('selectedAddressId');
     setAddresses([]);
     setView('home');
   };
