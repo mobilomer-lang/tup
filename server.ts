@@ -69,8 +69,6 @@ async function initDb() {
       app_name TEXT DEFAULT 'Su & Tüp',
       logo_url TEXT,
       contact_phone TEXT DEFAULT '444 42 44',
-      whatsapp_number TEXT,
-      whatsapp_message_template TEXT DEFAULT 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}',
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -83,14 +81,6 @@ async function initDb() {
   // Migration: Ensure logo_url exists in settings
   try {
     await db.execute("ALTER TABLE settings ADD COLUMN logo_url TEXT");
-  } catch (e) {}
-
-  // Migration: Ensure whatsapp fields exist in settings
-  try {
-    await db.execute("ALTER TABLE settings ADD COLUMN whatsapp_number TEXT");
-  } catch (e) {}
-  try {
-    await db.execute("ALTER TABLE settings ADD COLUMN whatsapp_message_template TEXT DEFAULT 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}'");
   } catch (e) {}
 
   // Initialize settings if empty
@@ -547,12 +537,12 @@ app.patch("/api/orders/:id", authenticateToken, async (req: any, res) => {
             });
             if (check.rows.length === 0) {
               await db.execute({
-                sql: "INSERT INTO user_deposits (user_id, category, count) VALUES (?, 'damacana', -1)",
+                sql: "INSERT INTO user_deposits (user_id, category, count) VALUES (?, 'damacana', 0)",
                 args: [user_id]
               });
             } else {
               await db.execute({
-                sql: "UPDATE user_deposits SET count = count - 1 WHERE user_id = ? AND category = 'damacana'",
+                sql: "UPDATE user_deposits SET count = MAX(0, count - 1) WHERE user_id = ? AND category = 'damacana'",
                 args: [user_id]
               });
             }
@@ -569,12 +559,12 @@ app.patch("/api/orders/:id", authenticateToken, async (req: any, res) => {
             });
             if (check.rows.length === 0) {
               await db.execute({
-                sql: "INSERT INTO user_deposits (user_id, category, count) VALUES (?, 'tup', -1)",
+                sql: "INSERT INTO user_deposits (user_id, category, count) VALUES (?, 'tup', 0)",
                 args: [user_id]
               });
             } else {
               await db.execute({
-                sql: "UPDATE user_deposits SET count = count - 1 WHERE user_id = ? AND category = 'tup'",
+                sql: "UPDATE user_deposits SET count = MAX(0, count - 1) WHERE user_id = ? AND category = 'tup'",
                 args: [user_id]
               });
             }
@@ -1029,11 +1019,11 @@ app.post("/api/admin/users/:id/deposits", authenticateToken, authorize(["admin",
     if (check.rows.length === 0) {
       await db.execute({
         sql: "INSERT INTO user_deposits (user_id, category, count) VALUES (?, ?, ?)",
-        args: [userId, category, quantity]
+        args: [userId, category, Math.max(0, quantity)]
       });
     } else {
       await db.execute({
-        sql: "UPDATE user_deposits SET count = count + ? WHERE user_id = ? AND category = ?",
+        sql: "UPDATE user_deposits SET count = MAX(0, count + ?) WHERE user_id = ? AND category = ?",
         args: [quantity, userId, category]
       });
     }

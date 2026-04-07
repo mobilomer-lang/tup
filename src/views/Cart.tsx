@@ -52,23 +52,6 @@ export default function Cart({ cart, addresses, settings, onUpdateCart, onOrderS
         has_empty_tup: hasEmptyTup
       });
 
-      // Automatic WhatsApp Redirect
-      if (settings?.whatsapp_number) {
-        const userName = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).name : 'Müşteri';
-        const userAddress = address?.address_text || 'Adres belirtilmedi';
-        
-        let message = settings.whatsapp_message_template || 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}';
-        
-        message = message
-          .replace('{name}', userName)
-          .replace('{address}', userAddress)
-          .replace('{items}', itemsText);
-
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/${settings.whatsapp_number}?text=${encodedMessage}`;
-        window.open(whatsappUrl, '_blank');
-      }
-
       onUpdateCart([]);
       setShowSuccess(true);
     } catch (e: any) {

@@ -217,7 +217,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
 
               <div className="grid grid-cols-2 gap-4">
                 {['damacana', 'tup'].map(cat => {
-                  const balance = depositUser.balances.find(b => b.category === cat)?.count || 0;
+                  const balance = Math.max(0, depositUser.balances.find(b => b.category === cat)?.count || 0);
                   return (
                     <div key={cat} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
                       <div>
@@ -248,18 +248,25 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {depositUser.movements.map((m, i) => (
-                        <tr key={i} className="hover:bg-white transition-colors">
-                          <td className="px-4 py-3 text-xs font-bold text-slate-700 capitalize">{m.category}</td>
-                          <td className={cn("px-4 py-3 text-xs font-black", m.quantity > 0 ? "text-green-600" : "text-red-600")}>
-                            {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
-                          </td>
-                          <td className="px-4 py-3 text-xs text-slate-500 font-medium">{m.description || '-'}</td>
-                          <td className="px-4 py-3 text-[10px] font-medium text-slate-400">
-                            {new Date(m.created_at).toLocaleDateString('tr-TR')}
-                          </td>
-                        </tr>
-                      ))}
+                      {depositUser.movements
+                        .filter(m => {
+                          // Filter out movements that might be confusing or too old
+                          // For now, let's just show the last 20 movements
+                          return true; 
+                        })
+                        .slice(0, 20)
+                        .map((m, i) => (
+                          <tr key={i} className="hover:bg-white transition-colors">
+                            <td className="px-4 py-3 text-xs font-bold text-slate-700 capitalize">{m.category}</td>
+                            <td className={cn("px-4 py-3 text-xs font-black", m.quantity > 0 ? "text-green-600" : "text-red-600")}>
+                              {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-500 font-medium">{m.description || '-'}</td>
+                            <td className="px-4 py-3 text-[10px] font-medium text-slate-400">
+                              {new Date(m.created_at).toLocaleDateString('tr-TR')}
+                            </td>
+                          </tr>
+                        ))}
                       {depositUser.movements.length === 0 && (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center text-xs text-slate-400 font-medium">Hareket bulunamadı</td>
@@ -833,41 +840,6 @@ function AppSettings({ onUpdate, onShowToast }: { onUpdate: () => void, onShowTo
             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
             placeholder="444 42 44"
           />
-        </div>
-
-        <div className="pt-4 border-t border-slate-100">
-          <h4 className="text-sm font-bold text-slate-800 mb-4">WhatsApp Sipariş Ayarları</h4>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">WhatsApp Numarası (90 ile başlayın)</label>
-              <input 
-                type="text" 
-                value={settings.whatsapp_number || ''} 
-                onChange={e => setSettings({ ...settings, whatsapp_number: e.target.value.replace(/\D/g, '') })}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
-                placeholder="905XXXXXXXXX"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">WhatsApp Mesaj Taslağı</label>
-              <textarea 
-                value={settings.whatsapp_message_template || ''} 
-                onChange={e => setSettings({ ...settings, whatsapp_message_template: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none h-32 text-sm"
-                placeholder="Mesaj taslağı..."
-              />
-              <div className="mt-2 p-3 bg-blue-50 rounded-xl">
-                <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
-                  <span className="font-bold">Değişkenler:</span><br />
-                  {"{name}"} : Müşteri Adı<br />
-                  {"{address}"} : Teslimat Adresi<br />
-                  {"{items}"} : Sipariş Edilen Ürünler
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <button 

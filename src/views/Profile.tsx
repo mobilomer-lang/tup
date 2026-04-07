@@ -149,7 +149,7 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
             </div>
             <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Damacana</p>
             <p className="text-2xl font-black text-slate-800">
-              {deposits.find(d => d.category === 'damacana')?.count || 0}
+              {Math.max(0, deposits.find(d => d.category === 'damacana')?.count || 0)}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm flex flex-col items-center text-center">
@@ -158,7 +158,7 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
             </div>
             <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Tüp</p>
             <p className="text-2xl font-black text-slate-800">
-              {deposits.find(d => d.category === 'tup')?.count || 0}
+              {Math.max(0, deposits.find(d => d.category === 'tup')?.count || 0)}
             </p>
           </div>
         </div>
