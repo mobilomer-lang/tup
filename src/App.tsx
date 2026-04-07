@@ -277,6 +277,7 @@ export default function App() {
             <Cart 
               cart={cart} 
               addresses={addresses} 
+              settings={settings}
               onUpdateCart={setCart} 
               onOrderSuccess={() => setView('orders')} 
               onGoToProfile={() => setView('profile')}

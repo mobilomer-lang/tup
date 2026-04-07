@@ -69,6 +69,8 @@ async function initDb() {
       app_name TEXT DEFAULT 'Su & Tüp',
       logo_url TEXT,
       contact_phone TEXT DEFAULT '444 42 44',
+      whatsapp_number TEXT,
+      whatsapp_message_template TEXT DEFAULT 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}',
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -81,6 +83,14 @@ async function initDb() {
   // Migration: Ensure logo_url exists in settings
   try {
     await db.execute("ALTER TABLE settings ADD COLUMN logo_url TEXT");
+  } catch (e) {}
+
+  // Migration: Ensure whatsapp fields exist in settings
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN whatsapp_number TEXT");
+  } catch (e) {}
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN whatsapp_message_template TEXT DEFAULT 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}'");
   } catch (e) {}
 
   // Initialize settings if empty
@@ -675,24 +685,104 @@ app.get("/api/settings", async (req, res) => {
 });
 
 app.post("/api/admin/settings", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  const { app_name, logo_url, contact_phone } = req.body;
+  const { app_name, logo_url, contact_phone, whatsapp_number, whatsapp_message_template } = req.body;
   
   // Get current settings first to preserve values if not provided
   const currentResult = await db.execute("SELECT * FROM settings LIMIT 1");
   const current = currentResult.rows[0];
 
   await db.execute({
-    sql: "UPDATE settings SET app_name = ?, logo_url = ?, contact_phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM settings LIMIT 1)",
+    sql: "UPDATE settings SET app_name = ?, logo_url = ?, contact_phone = ?, whatsapp_number = ?, whatsapp_message_template = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM settings LIMIT 1)",
     args: [
       app_name ?? current.app_name ?? 'Su & Tüp', 
       logo_url !== undefined ? logo_url : current.logo_url, 
-      contact_phone ?? current.contact_phone ?? '444 42 44'
+      contact_phone ?? current.contact_phone ?? '444 42 44',
+      whatsapp_number !== undefined ? whatsapp_number : current.whatsapp_number,
+      whatsapp_message_template !== undefined ? whatsapp_message_template : current.whatsapp_message_template
     ]
   });
   res.json({ success: true });
 });
 
 // Admin Users (Customers)
+app.post("/api/admin/orders/manual", authenticateToken, authorize(["admin", "super_admin"]), async (req: any, res) => {
+  const { user_id, customer_details, items, total_price, payment_method, has_empty_damacana, has_empty_tup } = req.body;
+  
+  try {
+    let finalUserId = user_id;
+    let finalAddressId = customer_details?.address_id;
+
+    // If no user_id, create or find user by phone
+    if (!finalUserId && customer_details) {
+      const { name, phone, address_text } = customer_details;
+      
+      const userResult = await db.execute({
+        sql: "SELECT id FROM users WHERE phone = ?",
+        args: [phone]
+      });
+
+      if (userResult.rows.length > 0) {
+        finalUserId = Number(userResult.rows[0].id);
+      } else {
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.default.hash('123456', 10); // Default password
+        const email = `${phone}@sutupsiparis.com`;
+        const newUserResult = await db.execute({
+          sql: "INSERT INTO users (name, phone, password, role, email) VALUES (?, ?, ?, 'customer', ?)",
+          args: [name, phone, hashedPassword, email]
+        });
+        finalUserId = Number(newUserResult.lastInsertRowid);
+      }
+
+      // Create address for the user if it's a new customer or if address_text is provided
+      if (address_text) {
+        const addressResult = await db.execute({
+          sql: "INSERT INTO addresses (user_id, title, address_text) VALUES (?, ?, ?)",
+          args: [finalUserId, 'Ev', address_text]
+        });
+        finalAddressId = Number(addressResult.lastInsertRowid);
+      }
+    }
+
+    if (!finalUserId) {
+      return res.status(400).json({ error: "Müşteri bilgisi eksik" });
+    }
+
+    if (!finalAddressId) {
+      // Try to get the first address of the user if not provided
+      const addrResult = await db.execute({
+        sql: "SELECT id FROM addresses WHERE user_id = ? AND is_active = 1 LIMIT 1",
+        args: [finalUserId]
+      });
+      if (addrResult.rows.length > 0) {
+        finalAddressId = Number(addrResult.rows[0].id);
+      } else {
+        return res.status(400).json({ error: "Müşteri adresi bulunamadı" });
+      }
+    }
+
+    // Create Order
+    const orderResult = await db.execute({
+      sql: "INSERT INTO orders (user_id, address_id, total_price, payment_method, has_empty_damacana, has_empty_tup) VALUES (?, ?, ?, ?, ?, ?)",
+      args: [finalUserId, finalAddressId, total_price, payment_method || 'cash_at_door', has_empty_damacana ? 1 : 0, has_empty_tup ? 1 : 0]
+    });
+    const orderId = Number(orderResult.lastInsertRowid);
+
+    // Create Order Items
+    for (const item of items) {
+      await db.execute({
+        sql: "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
+        args: [orderId, item.product_id, item.quantity, item.price]
+      });
+    }
+
+    res.json({ success: true, orderId });
+  } catch (e) {
+    console.error("Manual order creation error:", e);
+    res.status(500).json({ error: "Manuel sipariş oluşturulurken bir hata oluştu" });
+  }
+});
+
 app.get("/api/admin/users", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
   const result = await db.execute("SELECT id, name, phone, role, created_at FROM users WHERE role = 'customer' AND is_active = 1");
   res.json(result.rows);

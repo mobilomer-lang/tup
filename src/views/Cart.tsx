@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import LocationPicker from '../components/LocationPicker';
 
-export default function Cart({ cart, addresses, onUpdateCart, onOrderSuccess, onGoToProfile, onUpdateAddresses, onShowToast }: { 
+export default function Cart({ cart, addresses, settings, onUpdateCart, onOrderSuccess, onGoToProfile, onUpdateAddresses, onShowToast }: { 
   cart: CartItem[], 
   addresses: Address[], 
+  settings?: any,
   onUpdateCart: (cart: CartItem[]) => void,
   onOrderSuccess: () => void,
   onGoToProfile: () => void,
@@ -39,6 +40,9 @@ export default function Cart({ cart, addresses, onUpdateCart, onOrderSuccess, on
     }
     setLoading(true);
     try {
+      const address = addresses.find(a => a.id === selectedAddress);
+      const itemsText = cart.map(item => `${item.quantity}x ${item.name}`).join(', ');
+      
       await api.orders.create({
         items: cart.map(item => ({ product_id: item.id, quantity: item.quantity, price: item.price })),
         total_price: total,
@@ -47,6 +51,24 @@ export default function Cart({ cart, addresses, onUpdateCart, onOrderSuccess, on
         has_empty_damacana: hasEmptyDamacana,
         has_empty_tup: hasEmptyTup
       });
+
+      // Automatic WhatsApp Redirect
+      if (settings?.whatsapp_number) {
+        const userName = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).name : 'Müşteri';
+        const userAddress = address?.address_text || 'Adres belirtilmedi';
+        
+        let message = settings.whatsapp_message_template || 'Merhaba, yeni bir siparişim var:\n\n*Müşteri:* {name}\n*Adres:* {address}\n*Sipariş:* {items}';
+        
+        message = message
+          .replace('{name}', userName)
+          .replace('{address}', userAddress)
+          .replace('{items}', itemsText);
+
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${settings.whatsapp_number}?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+      }
+
       onUpdateCart([]);
       setShowSuccess(true);
     } catch (e: any) {
@@ -87,12 +109,14 @@ export default function Cart({ cart, addresses, onUpdateCart, onOrderSuccess, on
         <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">Teşekkürler</p>
         <h2 className="text-3xl font-black text-blue-900 mb-8">Siparişinizi Aldık</h2>
 
-        <button 
-          onClick={onOrderSuccess}
-          className="w-full max-w-xs py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-        >
-          Siparişlerime Git <ChevronRight className="w-5 h-5" />
-        </button>
+        <div className="w-full max-w-xs space-y-3">
+          <button 
+            onClick={onOrderSuccess}
+            className="w-full py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+          >
+            Siparişlerime Git <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </motion.div>
     );
   }

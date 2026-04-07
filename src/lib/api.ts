@@ -263,5 +263,13 @@ export const api = {
       });
       return handleResponse(res);
     },
+    createManualOrder: async (data: any) => {
+      const res = await fetch(`${API_BASE}/admin/orders/manual`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
   },
 };

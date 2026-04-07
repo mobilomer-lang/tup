@@ -12,6 +12,10 @@ import {
   ShoppingBag,
   ChevronRight,
   Plus,
+  PlusCircle,
+  Minus,
+  ChevronDown,
+  MapPin,
   Image as ImageIcon,
   Trash2,
   Edit2,
@@ -30,6 +34,7 @@ import {
 import { cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Orders from './Orders';
+import LocationPicker from '../components/LocationPicker';
 
 function Toast({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) {
   useEffect(() => {
@@ -426,6 +431,306 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
   );
 }
 
+function ManualOrder({ onShowToast }: { onShowToast: (msg: string, type: 'success' | 'error') => void }) {
+  const [customers, setCustomers] = useState<User[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const [orderType, setOrderType] = useState<'existing' | 'new'>('existing');
+  const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', address: '' });
+  const [selectedProducts, setSelectedProducts] = useState<{ product: Product, quantity: number }[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<'cash_at_door' | 'card_at_door'>('cash_at_door');
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [usersData, productsData] = await Promise.all([
+          api.admin.getUsers(),
+          api.products.adminList()
+        ]);
+        setCustomers(usersData);
+        setProducts(productsData.filter(p => p.is_active));
+      } catch (e) {
+        onShowToast('Veriler yüklenemedi', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleAddProduct = (product: Product) => {
+    const existing = selectedProducts.find(p => p.product.id === product.id);
+    if (existing) {
+      setSelectedProducts(selectedProducts.map(p => p.product.id === product.id ? { ...p, quantity: p.quantity + 1 } : p));
+    } else {
+      setSelectedProducts([...selectedProducts, { product, quantity: 1 }]);
+    }
+  };
+
+  const handleRemoveProduct = (productId: number) => {
+    setSelectedProducts(selectedProducts.filter(p => p.product.id !== productId));
+  };
+
+  const handleUpdateQuantity = (productId: number, delta: number) => {
+    setSelectedProducts(selectedProducts.map(p => {
+      if (p.product.id === productId) {
+        return { ...p, quantity: Math.max(1, p.quantity + delta) };
+      }
+      return p;
+    }));
+  };
+
+  const totalPrice = selectedProducts.reduce((sum, p) => sum + (p.product.price * p.quantity), 0);
+
+  const handleSubmit = async () => {
+    if (orderType === 'existing' && !selectedCustomer) {
+      onShowToast('Lütfen bir müşteri seçin', 'error');
+      return;
+    }
+    if (orderType === 'new' && (!newCustomer.name || !newCustomer.phone || !newCustomer.address)) {
+      onShowToast('Lütfen yeni müşteri bilgilerini eksiksiz girin', 'error');
+      return;
+    }
+    if (selectedProducts.length === 0) {
+      onShowToast('Lütfen en az bir ürün seçin', 'error');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const orderData = {
+        user_id: orderType === 'existing' ? selectedCustomer?.id : null,
+        customer_details: orderType === 'new' ? {
+          name: newCustomer.name,
+          phone: newCustomer.phone,
+          address_text: newCustomer.address
+        } : null,
+        items: selectedProducts.map(p => ({
+          product_id: p.product.id,
+          quantity: p.quantity,
+          price: p.product.price
+        })),
+        total_price: totalPrice,
+        payment_method: paymentMethod
+      };
+
+      await api.admin.createManualOrder(orderData);
+      onShowToast('Sipariş başarıyla oluşturuldu', 'success');
+      
+      // Reset form
+      setSelectedCustomer(null);
+      setNewCustomer({ name: '', phone: '', address: '' });
+      setSelectedProducts([]);
+      setOrderType('existing');
+    } catch (e: any) {
+      onShowToast(e.message || 'Sipariş oluşturulamadı', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-bold text-slate-800">Manuel Sipariş Oluştur</h3>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Customer Selection */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+          <div className="flex p-1 bg-slate-100 rounded-2xl">
+            <button 
+              onClick={() => setOrderType('existing')}
+              className={cn(
+                "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
+                orderType === 'existing' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"
+              )}
+            >
+              Mevcut Müşteri
+            </button>
+            <button 
+              onClick={() => setOrderType('new')}
+              className={cn(
+                "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
+                orderType === 'new' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"
+              )}
+            >
+              Yeni Müşteri
+            </button>
+          </div>
+
+          {orderType === 'existing' ? (
+            <div className="space-y-4">
+              <label className="block text-xs font-bold text-slate-400 uppercase">Müşteri Seçin</label>
+              <div className="relative">
+                <select 
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none appearance-none"
+                  value={selectedCustomer?.id || ''}
+                  onChange={(e) => {
+                    const customer = customers.find(c => c.id === Number(e.target.value));
+                    setSelectedCustomer(customer || null);
+                  }}
+                >
+                  <option value="">Müşteri Seçin...</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </div>
+              </div>
+              {selectedCustomer && (
+                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                  <p className="text-sm font-bold text-blue-900">{selectedCustomer.name}</p>
+                  <p className="text-xs text-blue-600 font-medium">{selectedCustomer.phone}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Müşteri Adı</label>
+                <input 
+                  type="text" 
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                  placeholder="Ad Soyad"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Telefon Numarası</label>
+                <input 
+                  type="text" 
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                  placeholder="05XXXXXXXXX"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Adres</label>
+                <div className="space-y-2">
+                  <textarea 
+                    value={newCustomer.address}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none h-24"
+                    placeholder="Açık adres..."
+                  />
+                  <button 
+                    onClick={() => setShowLocationPicker(true)}
+                    className="flex items-center gap-2 text-blue-600 text-xs font-bold hover:text-blue-700 transition-colors"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Haritadan Konum Seç
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showLocationPicker && (
+            <LocationPicker 
+              onClose={() => setShowLocationPicker(false)}
+              onSelect={(addr) => {
+                setNewCustomer(prev => ({ ...prev, address: addr.address_text }));
+                setShowLocationPicker(false);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Product Selection */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+          <div className="space-y-4">
+            <label className="block text-xs font-bold text-slate-400 uppercase">Ürün Ekle</label>
+            <div className="grid grid-cols-2 gap-3">
+              {products.map(product => (
+                <button 
+                  key={product.id}
+                  onClick={() => handleAddProduct(product)}
+                  className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-left hover:border-blue-200 transition-all group"
+                >
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{product.name}</p>
+                  <p className="text-[10px] text-slate-400 font-bold">{product.price.toFixed(2)} ₺</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-xs font-bold text-slate-400 uppercase">Seçili Ürünler</label>
+            <div className="space-y-3">
+              {selectedProducts.map(item => (
+                <div key={item.product.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-slate-800">{item.product.name}</p>
+                    <p className="text-[10px] text-slate-400 font-bold">{(item.product.price * item.quantity).toFixed(2)} ₺</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-xl border border-slate-100">
+                      <button onClick={() => handleUpdateQuantity(item.product.id, -1)} className="p-1 text-slate-400 hover:text-blue-600"><Minus className="w-3 h-3" /></button>
+                      <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                      <button onClick={() => handleUpdateQuantity(item.product.id, 1)} className="p-1 text-slate-400 hover:text-blue-600"><Plus className="w-3 h-3" /></button>
+                    </div>
+                    <button onClick={() => handleRemoveProduct(item.product.id)} className="p-2 text-red-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              ))}
+              {selectedProducts.length === 0 && (
+                <p className="text-center py-8 text-xs text-slate-400 font-medium">Henüz ürün seçilmedi</p>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-slate-800">Toplam Tutar</span>
+              <span className="text-lg font-black text-blue-600">{totalPrice.toFixed(2)} ₺</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setPaymentMethod('cash_at_door')}
+                className={cn(
+                  "py-3 rounded-xl text-[10px] font-bold border transition-all",
+                  paymentMethod === 'cash_at_door' ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-slate-100 text-slate-400"
+                )}
+              >
+                Kapıda Nakit
+              </button>
+              <button 
+                onClick={() => setPaymentMethod('card_at_door')}
+                className={cn(
+                  "py-3 rounded-xl text-[10px] font-bold border transition-all",
+                  paymentMethod === 'card_at_door' ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-slate-100 text-slate-400"
+                )}
+              >
+                Kapıda Kart
+              </button>
+            </div>
+
+            <button 
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all disabled:opacity-50"
+            >
+              {submitting ? "Sipariş Oluşturuluyor..." : "Siparişi Onayla ve Oluştur"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppSettings({ onUpdate, onShowToast }: { onUpdate: () => void, onShowToast: (msg: string, type: 'success' | 'error') => void }) {
   const [settings, setSettings] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
@@ -528,6 +833,41 @@ function AppSettings({ onUpdate, onShowToast }: { onUpdate: () => void, onShowTo
             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
             placeholder="444 42 44"
           />
+        </div>
+
+        <div className="pt-4 border-t border-slate-100">
+          <h4 className="text-sm font-bold text-slate-800 mb-4">WhatsApp Sipariş Ayarları</h4>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">WhatsApp Numarası (90 ile başlayın)</label>
+              <input 
+                type="text" 
+                value={settings.whatsapp_number || ''} 
+                onChange={e => setSettings({ ...settings, whatsapp_number: e.target.value.replace(/\D/g, '') })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                placeholder="905XXXXXXXXX"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">WhatsApp Mesaj Taslağı</label>
+              <textarea 
+                value={settings.whatsapp_message_template || ''} 
+                onChange={e => setSettings({ ...settings, whatsapp_message_template: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none h-32 text-sm"
+                placeholder="Mesaj taslağı..."
+              />
+              <div className="mt-2 p-3 bg-blue-50 rounded-xl">
+                <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                  <span className="font-bold">Değişkenler:</span><br />
+                  {"{name}"} : Müşteri Adı<br />
+                  {"{address}"} : Teslimat Adresi<br />
+                  {"{items}"} : Sipariş Edilen Ürünler
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button 
@@ -1588,10 +1928,11 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
+      <div className="flex flex-wrap gap-2">
         {[
           { id: 'stats', label: 'İstatistikler', icon: <BarChart3 className="w-6 h-6" /> },
           { id: 'orders', label: 'Siparişler', icon: <ClipboardList className="w-6 h-6" /> },
+          { id: 'manual_order', label: 'Manuel Sipariş', icon: <PlusCircle className="w-6 h-6" /> },
           { id: 'products', label: 'Ürünler', icon: <Package className="w-6 h-6" /> },
           { id: 'campaigns', label: 'Kampanyalar', icon: <Megaphone className="w-6 h-6" /> },
           { id: 'customers', label: 'Müşteriler', icon: <Users className="w-6 h-6" /> },
@@ -1602,7 +1943,7 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "aspect-square w-full max-w-[160px] mx-auto flex flex-col items-center justify-center gap-2 rounded-[24px] border transition-all duration-300",
+              "aspect-square w-[110px] flex flex-col items-center justify-center gap-2 rounded-[18px] border transition-all duration-300",
               activeTab === tab.id 
                 ? "bg-white border-blue-500 shadow-lg shadow-blue-50 scale-[1.02]" 
                 : "bg-white border-slate-100 text-slate-400 hover:border-blue-200 shadow-sm"
@@ -1699,6 +2040,8 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
           </>
         ) : activeTab === 'orders' ? (
           <Orders user={user} onShowToast={showToast} />
+        ) : activeTab === 'manual_order' ? (
+          <ManualOrder onShowToast={showToast} />
         ) : activeTab === 'products' ? (
           <ProductManager onShowToast={showToast} />
         ) : activeTab === 'campaigns' ? (
