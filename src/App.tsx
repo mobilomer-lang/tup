@@ -34,6 +34,7 @@ import Auth from './views/Auth';
 import Cart from './views/Cart';
 import Orders from './views/Orders';
 import Profile from './views/Profile';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 function Toast({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) {
   useEffect(() => {
@@ -204,6 +205,7 @@ export default function App() {
         }
         return [...prev, { ...product, quantity: 1 }];
       });
+      showToast("Ürün sepetinize eklendi", "success");
     });
   };
 
@@ -221,6 +223,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 relative overflow-x-hidden font-sans">
+      <PWAInstallPrompt />
       <AnimatePresence>
         {showAuth && (
           <motion.div 

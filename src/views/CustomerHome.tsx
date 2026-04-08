@@ -241,10 +241,16 @@ export default function CustomerHome({ products, addresses, onAddToCart, onRepea
 
         {/* Secondary Actions */}
         <div className="w-full">
-          <button className="w-full bg-white py-3 rounded-sm border border-slate-200 shadow-sm text-blue-900 font-black text-[21px] flex items-center justify-center gap-2">
-            <Phone className="w-6 h-6 text-green-500 fill-green-500" />
-            {settings?.contact_phone || '444 42 44'}
-          </button>
+          <a 
+            href={`tel:${(settings?.contact_phone || '444 42 44').replace(/\s/g, '')}`}
+            className="w-full bg-white py-3 rounded-sm border border-slate-200 shadow-sm text-blue-900 font-black text-[21px] flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors"
+          >
+            <span className="text-xs font-bold text-blue-950 uppercase tracking-wider [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Müşteri Hizmetleri</span>
+            <div className="flex items-center gap-2">
+              <Phone className="w-6 h-6 text-green-500 fill-green-500" />
+              {settings?.contact_phone || '444 42 44'}
+            </div>
+          </a>
         </div>
 
         {/* Product Grid */}

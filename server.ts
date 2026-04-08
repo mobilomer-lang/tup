@@ -9,6 +9,7 @@ import multer from "multer";
 import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 import dotenv from "dotenv";
+import sharp from "sharp";
 
 dotenv.config();
 
@@ -1262,6 +1263,122 @@ app.delete("/api/admin/campaigns/:id", authenticateToken, async (req: any, res) 
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: "Failed to delete campaign" });
+  }
+});
+
+// PWA Endpoints
+app.get("/manifest.json", async (req, res) => {
+  try {
+    const result = await db.execute("SELECT app_name, logo_url FROM settings LIMIT 1");
+    const settings = result.rows[0] || { app_name: 'Su & Tüp' };
+    const appName = (settings.app_name as string) || 'Su & Tüp';
+
+    const manifest = {
+      name: appName,
+      short_name: appName,
+      description: `${appName} - Su ve Tüp Sipariş Uygulaması`,
+      start_url: "/",
+      display: "standalone",
+      background_color: "#f8fafc",
+      theme_color: "#2563eb",
+      icons: [
+        {
+          src: "/api/pwa/icon/192",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any maskable"
+        },
+        {
+          src: "/api/pwa/icon/512",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable"
+        }
+      ]
+    };
+
+    res.json(manifest);
+  } catch (e) {
+    console.error("Manifest generation error:", e);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/pwa/icon/:size", async (req, res) => {
+  const size = parseInt(req.params.size) || 192;
+  try {
+    const result = await db.execute("SELECT logo_url FROM settings LIMIT 1");
+    const logoUrl = result.rows[0]?.logo_url as string;
+
+    let imageBuffer: Buffer;
+
+    if (logoUrl) {
+      if (logoUrl.startsWith('http')) {
+        const response = await fetch(logoUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+      } else if (logoUrl.startsWith('/uploads/')) {
+        const filePath = path.join(process.cwd(), logoUrl);
+        if (fs.existsSync(filePath)) {
+          imageBuffer = fs.readFileSync(filePath);
+        } else {
+          throw new Error("Logo file not found");
+        }
+      } else {
+        throw new Error("Invalid logo URL");
+      }
+    } else {
+      // Fallback: Create a simple colored square with initial if no logo
+      imageBuffer = await sharp({
+        create: {
+          width: size,
+          height: size,
+          channels: 4,
+          background: { r: 37, g: 99, b: 235, alpha: 1 }
+        }
+      }).png().toBuffer();
+    }
+
+    const resizedImage = await sharp(imageBuffer)
+      .resize(size, size, {
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 0 }
+      })
+      .png()
+      .toBuffer();
+
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "public, max-age=86400");
+    res.send(resizedImage);
+  } catch (e) {
+    console.error("Icon resizing error:", e);
+    // Return a default blue square on error
+    try {
+      const errorIcon = await sharp({
+        create: {
+          width: size,
+          height: size,
+          channels: 4,
+          background: { r: 37, g: 99, b: 235, alpha: 1 }
+        }
+      }).png().toBuffer();
+      res.set("Content-Type", "image/png");
+      res.send(errorIcon);
+    } catch (err) {
+      res.status(500).send("Error generating icon");
+    }
+  }
+});
+
+// Service Worker Route
+app.get("/sw.js", (req, res) => {
+  const swPath = path.join(process.cwd(), "public", "sw.js");
+  if (fs.existsSync(swPath)) {
+    res.set("Content-Type", "application/javascript");
+    res.set("Service-Worker-Allowed", "/");
+    res.sendFile(swPath);
+  } else {
+    res.status(404).send("Service Worker not found");
   }
 });
 
