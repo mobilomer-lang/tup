@@ -368,6 +368,29 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+app.post("/api/user/change-password", authenticateToken, async (req: any, res) => {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const result = await db.execute({
+      sql: "SELECT password FROM users WHERE id = ?",
+      args: [req.user.id]
+    });
+    const user = result.rows[0];
+    if (!user || !(await bcrypt.compare(currentPassword, user.password as string))) {
+      return res.status(400).json({ error: "Mevcut şifre hatalı" });
+    }
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await db.execute({
+      sql: "UPDATE users SET password = ? WHERE id = ?",
+      args: [hashedNewPassword, req.user.id]
+    });
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Change password error:", e);
+    res.status(500).json({ error: "Şifre değiştirilirken bir hata oluştu" });
+  }
+});
+
 app.get("/api/products", async (req, res) => {
   const result = await db.execute("SELECT * FROM products WHERE is_active = 1");
   res.json(result.rows);

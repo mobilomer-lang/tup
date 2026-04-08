@@ -241,8 +241,8 @@ export default function CustomerHome({ products, addresses, onAddToCart, onRepea
 
         {/* Secondary Actions */}
         <div className="w-full">
-          <button className="w-full bg-white py-3 rounded border border-slate-200 shadow-sm text-blue-900 font-black text-sm flex items-center justify-center gap-2">
-            <Phone className="w-4 h-4 text-green-500 fill-green-500" />
+          <button className="w-full bg-white py-3 rounded-sm border border-slate-200 shadow-sm text-blue-900 font-black text-[21px] flex items-center justify-center gap-2">
+            <Phone className="w-6 h-6 text-green-500 fill-green-500" />
             {settings?.contact_phone || '444 42 44'}
           </button>
         </div>

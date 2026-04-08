@@ -153,7 +153,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
         {role === 'courier' && (
           <button 
             onClick={() => setEditing({ name: '', phone: '', role: 'courier' })}
-            className="p-2 bg-blue-600 text-white rounded-xl shadow-sm"
+            className="p-2 bg-blue-600 text-white rounded-sm shadow-sm"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -162,8 +162,8 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
 
       <div className="space-y-4">
         {users.map((u) => (
-          <div key={u.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 overflow-hidden border border-slate-100">
+          <div key={u.id} className="bg-white p-4 rounded-md border border-slate-100 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-50 rounded-sm flex items-center justify-center text-slate-400 overflow-hidden border border-slate-100">
               <UserIcon className="w-6 h-6" />
             </div>
             <div className="flex-1">
@@ -174,16 +174,16 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               {role === 'customer' && (
                 <button 
                   onClick={() => loadDeposits(u)}
-                  className="p-2 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors"
+                  className="p-2 text-amber-600 bg-amber-50 rounded-sm hover:bg-amber-100 transition-colors"
                   title="Depozito Yönetimi"
                 >
                   <ShoppingBag className="w-4 h-4" />
                 </button>
               )}
-              <button onClick={() => setEditing(u)} className="p-2 text-blue-700 bg-blue-50 rounded-lg">
+              <button onClick={() => setEditing(u)} className="p-2 text-blue-700 bg-blue-50 rounded-sm">
                 <Edit2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setDeletingId(u.id)} className="p-2 text-red-700 bg-red-50 rounded-lg">
+              <button onClick={() => setDeletingId(u.id)} className="p-2 text-red-700 bg-red-50 rounded-sm">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -198,11 +198,11 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-2xl rounded-[32px] p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white w-full max-w-2xl rounded-lg p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                  <div className="w-10 h-10 bg-amber-50 rounded-sm flex items-center justify-center text-amber-600">
                     <ShoppingBag className="w-5 h-5" />
                   </div>
                   <div>
@@ -219,14 +219,14 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                 {['damacana', 'tup'].map(cat => {
                   const balance = Math.max(0, depositUser.balances.find(b => b.category === cat)?.count || 0);
                   return (
-                    <div key={cat} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <div key={cat} className="bg-slate-50 p-4 rounded-md border border-slate-100 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase">{cat === 'damacana' ? 'Damacana' : 'Tüp'}</p>
                         <p className="text-2xl font-black text-slate-800">{balance}</p>
                       </div>
                       <button 
                         onClick={() => setAdjustingDeposit({ category: cat as any, quantity: 0, description: '' })}
-                        className="p-2 bg-white text-blue-600 rounded-xl border border-slate-200 shadow-sm"
+                        className="p-2 bg-white text-blue-600 rounded-sm border border-slate-200 shadow-sm"
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -237,7 +237,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
 
               <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Hareket Geçmişi</h4>
-                <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+                <div className="bg-slate-50 rounded-md overflow-hidden border border-slate-100">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-100 bg-slate-100/50">
@@ -288,7 +288,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-sm rounded-[32px] p-8 space-y-6 shadow-2xl"
+              className="bg-white w-full max-w-sm rounded-lg p-8 space-y-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-slate-800">Depozito Düzenle</h3>
@@ -298,7 +298,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-4 bg-slate-50 rounded-md border border-slate-100">
                   <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Kategori</p>
                   <p className="text-sm font-bold text-slate-800 capitalize">{adjustingDeposit.category}</p>
                 </div>
@@ -309,7 +309,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                     type="number" 
                     value={adjustingDeposit.quantity || ''} 
                     onChange={e => setAdjustingDeposit({ ...adjustingDeposit, quantity: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none font-bold"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm focus:ring-2 focus:ring-blue-600 outline-none font-bold"
                     placeholder="0"
                   />
                 </div>
@@ -319,14 +319,14 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                   <textarea 
                     value={adjustingDeposit.description} 
                     onChange={e => setAdjustingDeposit({ ...adjustingDeposit, description: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none h-24 text-sm"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm focus:ring-2 focus:ring-blue-600 outline-none h-24 text-sm"
                     placeholder="İşlem nedeni..."
                   />
                 </div>
 
                 <button 
                   onClick={handleAdjustDeposit}
-                  className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg"
+                  className="w-full py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg"
                 >
                   Güncelle
                 </button>
@@ -343,7 +343,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-sm rounded-[32px] p-8 space-y-6 shadow-2xl border-2 border-red-100"
+              className="bg-white w-full max-w-sm rounded-lg p-8 space-y-6 shadow-2xl border-2 border-red-100"
             >
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-600 mx-auto">
                 <Trash2 className="w-8 h-8" />
@@ -355,7 +355,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               <div className="flex gap-3">
                 <button 
                   onClick={() => setDeletingId(null)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl"
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-sm"
                 >
                   Vazgeç
                 </button>
@@ -364,7 +364,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                     handleDelete(deletingId);
                     setDeletingId(null);
                   }}
-                  className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100"
+                  className="flex-1 py-3 bg-red-600 text-white font-bold rounded-sm shadow-lg shadow-red-100"
                 >
                   Evet, Sil
                 </button>
@@ -381,7 +381,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-8 space-y-6 shadow-2xl"
+              className="bg-white w-full max-w-md rounded-t-lg sm:rounded-lg p-8 space-y-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-slate-800">{editing.id ? (role === 'customer' ? 'Müşteriyi Düzenle' : 'Kuryeyi Düzenle') : 'Yeni Kurye'}</h3>
@@ -397,7 +397,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                     type="text" 
                     value={editing.name} 
                     onChange={e => setEditing({ ...editing, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
                 <div>
@@ -406,7 +406,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                     type="tel" 
                     value={editing.phone} 
                     onChange={e => setEditing({ ...editing, phone: e.target.value.replace(/\D/g, '') })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm focus:ring-2 focus:ring-blue-600 outline-none"
                     placeholder="05000000000"
                   />
                 </div>
@@ -417,7 +417,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
                     type="password" 
                     value={editing.password || ''}
                     onChange={e => setEditing({ ...editing, password: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm focus:ring-2 focus:ring-blue-600 outline-none"
                     placeholder="••••••••"
                   />
                 </div>
@@ -426,7 +426,7 @@ function UserManager({ role, onShowToast }: { role: 'customer' | 'courier', onSh
 
               <button 
                 onClick={handleSave}
-                className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg"
+                className="w-full py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg"
               >
                 Kaydet
               </button>
@@ -988,49 +988,49 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-lg font-bold text-slate-800">Ürün Yönetimi</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setShowStockReport(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-md hover:bg-slate-200 transition-colors"
           >
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Stok Raporu</span>
+            <span>Stok Raporu</span>
           </button>
           <button 
             onClick={() => setEditing({ name: '', category: 'water', price: 0, stock: 0, description: '', image_url: '' })}
-            className="p-2 bg-blue-600 text-white rounded-xl shadow-sm"
+            className="p-2 bg-blue-600 text-white rounded-md shadow-sm"
           >
             <Plus className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {products.map((p) => (
-          <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div key={p.id} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div 
-              className="flex items-center gap-4 flex-1 cursor-pointer"
+              className="flex items-center gap-4 flex-1 cursor-pointer w-full"
               onClick={() => loadMovements(p)}
             >
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 overflow-hidden border border-slate-100">
+              <div className="w-12 h-12 bg-slate-50 rounded-md flex items-center justify-center text-slate-400 overflow-hidden border border-slate-100 shrink-0">
                 {p.image_url ? <img src={p.image_url} className="w-full h-full object-contain" /> : <Package className="w-6 h-6" />}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-slate-800">{p.name}</h4>
+                  <h4 className="font-bold text-slate-800 truncate">{p.name}</h4>
                   {/* @ts-ignore */}
                   {!p.is_active && <span className="text-[8px] font-black bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full uppercase">Pasif</span>}
                 </div>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                   <p className="text-[10px] text-blue-700 font-bold">{p.price.toFixed(2)} ₺</p>
                   <p className="text-[10px] text-slate-400 font-medium">Stok: {p.stock}</p>
                   <p className="text-[10px] text-slate-400 font-medium uppercase">{p.category}</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 mt-2 sm:mt-0">
               <button 
                 onClick={() => toggleActive(p)} 
                 className={cn(
@@ -1049,15 +1049,15 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               </button>
               <button 
                 onClick={() => setStockEditing({ product: p, mode: 'entry', amount: 0, description: '', correctionType: 'increase' })} 
-                className="p-2 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors"
+                className="p-2 text-amber-600 bg-amber-50 rounded-md hover:bg-amber-100 transition-colors"
                 title="Stok Yönetimi"
               >
                 <ClipboardList className="w-4 h-4" />
               </button>
-              <button onClick={() => setEditing(p)} className="p-2 text-blue-700 bg-blue-50 rounded-lg">
+              <button onClick={() => setEditing(p)} className="p-2 text-blue-700 bg-blue-50 rounded-md">
                 <Edit2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setDeletingId(p.id)} className="p-2 text-red-600 bg-red-50 rounded-lg">
+              <button onClick={() => setDeletingId(p.id)} className="p-2 text-red-600 bg-red-50 rounded-md">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -1072,11 +1072,11 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-md rounded-[32px] p-8 shadow-2xl h-[540px] flex flex-col"
+              className="bg-white w-full max-w-md rounded-xl p-6 sm:p-8 shadow-2xl h-auto max-h-[90vh] flex flex-col overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                  <div className="w-10 h-10 bg-amber-50 rounded-md flex items-center justify-center text-amber-600">
                     <ClipboardList className="w-5 h-5" />
                   </div>
                   <div>
@@ -1089,15 +1089,15 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col justify-between">
+              <div className="flex-1 flex flex-col gap-6">
                 <div className="space-y-4">
-                  <div className="flex p-1 bg-slate-100 rounded-xl">
+                  <div className="flex p-1 bg-slate-100 rounded-lg">
                     {(['entry', 'reduction', 'correction'] as const).map((m) => (
                       <button
                         key={m}
                         onClick={() => setStockEditing({ ...stockEditing, mode: m })}
                         className={cn(
-                          "flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all",
+                          "flex-1 py-2 text-[10px] font-black uppercase rounded-md transition-all",
                           stockEditing.mode === m ? "bg-white text-blue-600 shadow-sm" : "text-slate-400"
                         )}
                       >
@@ -1172,11 +1172,11 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-lg rounded-[32px] p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+              className="bg-white w-full max-w-lg rounded-xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                  <div className="w-10 h-10 bg-blue-50 rounded-md flex items-center justify-center text-blue-600">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
@@ -1193,7 +1193,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               </div>
 
               <div className="flex-1 overflow-y-auto no-scrollbar">
-                <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+                <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-100 bg-slate-100/50">
@@ -1231,7 +1231,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               <div className="pt-2">
                 <button 
                   onClick={() => setShowStockReport(false)}
-                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100"
+                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-blue-100"
                 >
                   Kapat
                 </button>
@@ -1248,11 +1248,11 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-2xl rounded-[32px] p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white w-full max-w-2xl rounded-xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                  <div className="w-10 h-10 bg-blue-50 rounded-md flex items-center justify-center text-blue-600">
                     <History className="w-5 h-5" />
                   </div>
                   <div>
@@ -1284,7 +1284,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                       <ShoppingBag className="w-4 h-4" />
                       Satış Hareketleri
                     </h4>
-                    <div className="bg-slate-50 rounded-2xl overflow-hidden">
+                    <div className="bg-slate-50 rounded-lg overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-slate-100">
@@ -1326,7 +1326,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                       <Package className="w-4 h-4" />
                       Stok Hareketleri (Manuel)
                     </h4>
-                    <div className="bg-slate-50 rounded-2xl overflow-hidden">
+                    <div className="bg-slate-50 rounded-lg overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-slate-100">
@@ -1377,7 +1377,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-sm rounded-[32px] p-8 space-y-6 shadow-2xl border-2 border-red-100"
+              className="bg-white w-full max-w-sm rounded-xl p-6 sm:p-8 space-y-6 shadow-2xl border-2 border-red-100"
             >
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-600 mx-auto">
                 <Trash2 className="w-8 h-8" />
@@ -1389,7 +1389,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               <div className="flex gap-3">
                 <button 
                   onClick={() => setDeletingId(null)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl"
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-lg"
                 >
                   Vazgeç
                 </button>
@@ -1398,7 +1398,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                     handleDelete(deletingId);
                     setDeletingId(null);
                   }}
-                  className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100"
+                  className="flex-1 py-3 bg-red-600 text-white font-bold rounded-lg shadow-lg shadow-red-100"
                 >
                   Evet, Sil
                 </button>
@@ -1415,7 +1415,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-8 space-y-6 shadow-2xl"
+              className="bg-white w-full max-w-md rounded-t-xl sm:rounded-xl p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-slate-800">{editing.id ? 'Ürünü Düzenle' : 'Yeni Ürün'}</h3>
@@ -1424,23 +1424,23 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                 </button>
               </div>
 
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar pr-2">
+              <div className="space-y-4 pr-2">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Ürün Adı</label>
                   <input 
                     type="text" 
                     value={editing.name || ''} 
                     onChange={e => setEditing({ ...editing, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Kategori</label>
                     <select 
                       value={editing.category || 'water'} 
                       onChange={e => setEditing({ ...editing, category: e.target.value as any })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 outline-none"
                     >
                       <option value="water">Su</option>
                       <option value="gas">Tüp</option>
@@ -1453,7 +1453,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                       type="number" 
                       value={editing.price || 0} 
                       onChange={e => setEditing({ ...editing, price: parseFloat(e.target.value) })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 outline-none"
                     />
                   </div>
                 </div>
@@ -1463,7 +1463,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                     type="number" 
                     value={editing.stock || 0} 
                     onChange={e => setEditing({ ...editing, stock: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
                 <div>
@@ -1471,16 +1471,16 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                   <textarea 
                     value={editing.description || ''} 
                     onChange={e => setEditing({ ...editing, description: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none h-20"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 outline-none h-20"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Görsel</label>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden flex items-center justify-center">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="w-16 h-16 bg-slate-50 rounded-md border border-slate-100 overflow-hidden flex items-center justify-center shrink-0">
                       {editing.image_url ? <img src={editing.image_url} className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                       <input 
                         type="file" 
                         accept="image/*"
@@ -1491,7 +1491,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                       <label 
                         htmlFor="product-image-upload"
                         className={cn(
-                          "inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold cursor-pointer",
+                          "inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-md text-xs font-bold cursor-pointer",
                           uploading && "opacity-50"
                         )}
                       >
@@ -1502,7 +1502,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
                         type="text" 
                         value={editing.image_url || ''} 
                         onChange={e => setEditing({ ...editing, image_url: e.target.value })}
-                        className="w-full mt-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] outline-none"
+                        className="w-full mt-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-sm text-[10px] outline-none"
                         placeholder="Veya URL yapıştırın"
                       />
                     </div>
@@ -1512,7 +1512,7 @@ function ProductManager({ onShowToast }: { onShowToast: (msg: string, type: 'suc
 
               <button 
                 onClick={handleSave}
-                className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg"
+                className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-lg"
               >
                 Kaydet
               </button>
@@ -1675,7 +1675,7 @@ function CampaignManager({ onShowToast }: { onShowToast: (msg: string, type: 'su
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-sm rounded-[32px] p-8 space-y-6 shadow-2xl border-2 border-red-100"
+              className="bg-white w-full max-w-sm rounded-lg p-8 space-y-6 shadow-2xl border-2 border-red-100"
             >
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-600 mx-auto">
                 <Trash2 className="w-8 h-8" />
@@ -1713,7 +1713,7 @@ function CampaignManager({ onShowToast }: { onShowToast: (msg: string, type: 'su
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-8 space-y-6 shadow-2xl"
+              className="bg-white w-full max-w-md rounded-t-lg sm:rounded-lg p-8 space-y-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-slate-800">{editing.id ? 'Kampanyayı Düzenle' : 'Yeni Kampanya'}</h3>
@@ -1900,11 +1900,11 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
         {[
           { id: 'stats', label: 'İstatistikler', icon: <BarChart3 className="w-6 h-6" /> },
           { id: 'orders', label: 'Siparişler', icon: <ClipboardList className="w-6 h-6" /> },
-          { id: 'manual_order', label: 'Manuel Sipariş', icon: <PlusCircle className="w-6 h-6" /> },
+          { id: 'manual_order', label: 'Sipariş Ekle', icon: <PlusCircle className="w-6 h-6" /> },
           { id: 'products', label: 'Ürünler', icon: <Package className="w-6 h-6" /> },
           { id: 'campaigns', label: 'Kampanyalar', icon: <Megaphone className="w-6 h-6" /> },
           { id: 'customers', label: 'Müşteriler', icon: <Users className="w-6 h-6" /> },
@@ -1915,20 +1915,20 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "aspect-square w-[110px] flex flex-col items-center justify-center gap-2 rounded-[18px] border transition-all duration-300",
+              "aspect-square w-full sm:w-[110px] flex flex-col items-center justify-center gap-2 rounded-[18px] border transition-all duration-300",
               activeTab === tab.id 
                 ? "bg-white border-blue-500 shadow-lg shadow-blue-50 scale-[1.02]" 
                 : "bg-white border-slate-100 text-slate-400 hover:border-blue-200 shadow-sm"
             )}
           >
             <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
+              "w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
               activeTab === tab.id ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600"
             )}>
               {tab.icon}
             </div>
             <span className={cn(
-              "text-sm font-poppins font-bold",
+              "text-[10px] sm:text-sm font-poppins font-bold text-center px-1",
               activeTab === tab.id ? "text-blue-600" : "text-slate-700"
             )}>{tab.label}</span>
           </button>

@@ -245,7 +245,7 @@ export default function App() {
                 <Truck className="text-blue-600 w-10 h-10" />
               )}
             </div>
-            <h1 className="text-lg font-bold text-slate-800 tracking-tight uppercase font-roboto">
+            <h1 className="text-xl sm:text-[35px] font-bold text-slate-800 tracking-tight uppercase font-outfit leading-none">
               {settings?.app_name || 'kardelen'}
             </h1>
           </div>

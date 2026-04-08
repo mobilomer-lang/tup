@@ -35,6 +35,8 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
   onShowToast?: (msg: string, type: 'success' | 'error') => void
 }) {
   const [showAddAddress, setShowAddAddress] = useState(addresses.length === 0);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [newTitle, setNewTitle] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [newCoords, setNewCoords] = useState<[number, number] | null>(null);
@@ -101,6 +103,25 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      onShowToast?.('Şifreler eşleşmiyor', 'error');
+      return;
+    }
+    try {
+      await api.auth.changePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      });
+      onShowToast?.('Şifreniz başarıyla güncellendi', 'success');
+      setShowPasswordModal(false);
+      setPasswords({ current: '', new: '', confirm: '' });
+    } catch (e: any) {
+      onShowToast?.(e.message || 'Şifre güncellenirken hata oluştu', 'error');
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -109,14 +130,14 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
     >
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-slate-800">Profilim</h2>
-        <button className="p-2 bg-slate-100 text-slate-600 rounded">
+        <button className="p-2 bg-slate-100 text-slate-600 rounded-sm">
           <Settings className="w-6 h-6" />
         </button>
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white p-8 rounded-md shadow-sm border border-slate-100 flex flex-col items-center text-center">
-        <div className="w-24 h-24 bg-blue-50 rounded-md flex items-center justify-center text-blue-600 mb-6 relative">
+      <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-100 flex flex-col items-center text-center">
+        <div className="w-24 h-24 bg-blue-50 rounded-sm flex items-center justify-center text-blue-600 mb-6 relative">
           <UserIcon className="w-12 h-12" />
           <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 border-4 border-white rounded-full flex items-center justify-center">
             <ShieldCheck className="w-4 h-4 text-white" />
@@ -126,12 +147,12 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
         <p className="text-sm font-medium text-slate-400 mb-6 capitalize">{user.role.replace('_', ' ')}</p>
         
         <div className="w-full grid grid-cols-2 gap-4">
-          <div className="bg-slate-50 p-4 rounded-lg text-left">
+          <div className="bg-slate-50 p-4 rounded-md text-left">
             <Mail className="w-4 h-4 text-blue-600 mb-2" />
             <p className="text-[10px] text-slate-400 font-bold uppercase">E-posta</p>
             <p className="text-xs font-bold text-slate-800 truncate">{user.email}</p>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg text-left">
+          <div className="bg-slate-50 p-4 rounded-md text-left">
             <Phone className="w-4 h-4 text-blue-600 mb-2" />
             <p className="text-[10px] text-slate-400 font-bold uppercase">Telefon</p>
             <p className="text-xs font-bold text-slate-800">{user.phone || 'Eklenmemiş'}</p>
@@ -143,8 +164,8 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-slate-800">Depozitolarım</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-blue-50 rounded-md flex items-center justify-center text-blue-600 mb-3">
+          <div className="bg-white p-6 rounded-md border border-slate-100 shadow-sm flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-blue-50 rounded-sm flex items-center justify-center text-blue-600 mb-3">
               <ShoppingBag className="w-6 h-6" />
             </div>
             <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Damacana</p>
@@ -152,8 +173,8 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
               {Math.max(0, deposits.find(d => d.category === 'damacana')?.count || 0)}
             </p>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-amber-50 rounded-md flex items-center justify-center text-amber-600 mb-3">
+          <div className="bg-white p-6 rounded-md border border-slate-100 shadow-sm flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-amber-50 rounded-sm flex items-center justify-center text-amber-600 mb-3">
               <Package className="w-6 h-6" />
             </div>
             <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Tüp</p>
@@ -171,7 +192,7 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
             <h3 className="text-lg font-bold text-slate-800">Adreslerim</h3>
             <button 
               onClick={() => setShowAddAddress(!showAddAddress)}
-              className="p-2 bg-blue-50 text-blue-600 rounded"
+              className="p-2 bg-blue-50 text-blue-600 rounded-sm"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -182,27 +203,27 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               onSubmit={handleAddAddress}
-              className="bg-white p-6 rounded-lg border border-blue-100 shadow-sm space-y-4"
+              className="bg-white p-6 rounded-md border border-blue-100 shadow-sm space-y-4"
             >
               <input 
                 type="text" 
                 placeholder="Adres Başlığı (örn: Ev, İş)" 
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
               <textarea 
                 placeholder={loadingAddress ? "Adres alınıyor..." : "Tam Adres"} 
                 value={newAddress}
                 onChange={e => setNewAddress(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none text-sm"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none text-sm"
                 required
                 disabled={loadingAddress}
               />
               <div className="space-y-2">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Haritadan Konum Seç (Opsiyonel)</p>
-                <div className="h-48 rounded-md overflow-hidden border border-slate-100 relative">
+                <div className="h-48 rounded-sm overflow-hidden border border-slate-100 relative">
                   <MapContainer 
                     center={[36.6888, 34.4258]} 
                     zoom={13} 
@@ -230,7 +251,7 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
                   </p>
                 )}
               </div>
-              <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded shadow-lg">
+              <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded-sm shadow-lg">
                 Adresi Kaydet
               </button>
             </motion.form>
@@ -238,8 +259,8 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
 
           <div className="space-y-3">
             {addresses.map(addr => (
-              <div key={addr.id} className="bg-white p-4 rounded-lg border border-slate-100 flex items-center gap-4 group">
-                <div className="w-12 h-12 bg-slate-50 rounded-md flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+              <div key={addr.id} className="bg-white p-4 rounded-md border border-slate-100 flex items-center gap-4 group">
+                <div className="w-12 h-12 bg-slate-50 rounded-sm flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
                   <MapPin className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
@@ -262,20 +283,83 @@ export default function Profile({ user, addresses, onUpdateAddresses, onShowToas
       )}
 
       {/* Settings List */}
-      <div className="bg-white rounded-md shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-sm shadow-sm border border-slate-100 overflow-hidden">
         <SettingItem icon={<Bell className="w-5 h-5" />} label="Bildirim Ayarları" />
-        <SettingItem icon={<ShieldCheck className="w-5 h-5" />} label="Güvenlik ve Şifre" />
+        <SettingItem 
+          icon={<ShieldCheck className="w-5 h-5" />} 
+          label="Güvenlik ve Şifre" 
+          onClick={() => setShowPasswordModal(true)}
+        />
         <SettingItem icon={<Phone className="w-5 h-5" />} label="Yardım ve Destek" />
       </div>
+
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white w-full max-w-md rounded-md p-8 space-y-6 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-800">Şifre Değiştir</h3>
+                <button onClick={() => setShowPasswordModal(false)} className="p-2 bg-slate-100 rounded-full">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mevcut Şifre</label>
+                  <input 
+                    type="password" 
+                    value={passwords.current}
+                    onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Yeni Şifre</label>
+                  <input 
+                    type="password" 
+                    value={passwords.new}
+                    onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Yeni Şifre (Tekrar)</label>
+                  <input 
+                    type="password" 
+                    value={passwords.confirm}
+                    onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-sm outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+                <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg">
+                  Şifreyi Güncelle
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-function SettingItem({ icon, label }: { icon: React.ReactNode, label: string }) {
+function SettingItem({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick?: () => void }) {
   return (
-    <button className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0">
+    <button 
+      onClick={onClick}
+      className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0"
+    >
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-slate-50 rounded flex items-center justify-center text-slate-400">
+        <div className="w-10 h-10 bg-slate-50 rounded-sm flex items-center justify-center text-slate-400">
           {icon}
         </div>
         <span className="text-sm font-bold text-slate-800">{label}</span>

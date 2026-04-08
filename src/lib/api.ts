@@ -43,6 +43,14 @@ export const api = {
       });
       return handleResponse(res);
     },
+    changePassword: async (data: any) => {
+      const res = await fetch(`${API_BASE}/user/change-password`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
   },
   products: {
     list: async (): Promise<Product[]> => {
