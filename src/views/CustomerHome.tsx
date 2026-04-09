@@ -179,7 +179,7 @@ export default function CustomerHome({ products, addresses, onAddToCart, onRepea
                       className="absolute inset-0 w-full h-full object-cover sm:object-contain z-0"
                     />
                   )}
-                  <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10">
+                  <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-end z-10">
                     <div className="flex items-center justify-between mb-2">
                       {campaign.badge && (
                         <div className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded border border-white/30">
