@@ -29,7 +29,9 @@ import {
   ClipboardList,
   Megaphone,
   History,
-  FileText
+  FileText,
+  Droplets,
+  Flame
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -1958,7 +1960,7 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
         {activeTab === 'stats' ? (
           <>
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <StatCard 
                 icon={<DollarSign className="w-5 h-5" />} 
                 label="Toplam Ciro" 
@@ -1967,11 +1969,18 @@ export default function AdminHome({ user, onUpdateSettings, onShowToast }: { use
                 trend="+12%"
               />
               <StatCard 
-                icon={<ShoppingBag className="w-5 h-5" />} 
-                label="Siparişler" 
-                value={stats?.totalOrders || '0'} 
-                color="bg-blue-500" 
-                trend="+5%"
+                icon={<Droplets className="w-5 h-5" />} 
+                label="Günlük Su" 
+                value={stats?.dailyWaterSales || '0'} 
+                color="bg-cyan-600" 
+                trend="Bugün"
+              />
+              <StatCard 
+                icon={<Flame className="w-5 h-5" />} 
+                label="Günlük Tüp" 
+                value={stats?.dailyGasSales || '0'} 
+                color="bg-orange-600" 
+                trend="Bugün"
               />
             </div>
 
