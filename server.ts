@@ -1144,6 +1144,23 @@ app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
   
   const totalOrders = await db.execute("SELECT COUNT(*) as count FROM orders");
   const totalRevenue = await db.execute("SELECT SUM(total_price) as total FROM orders WHERE status = 'delivered'");
+  
+  const dailyWaterSales = await db.execute(`
+    SELECT SUM(oi.quantity) as count 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    JOIN orders o ON oi.order_id = o.id 
+    WHERE p.category = 'water' AND date(o.created_at) = date('now') AND o.status != 'cancelled'
+  `);
+  
+  const dailyGasSales = await db.execute(`
+    SELECT SUM(oi.quantity) as count 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    JOIN orders o ON oi.order_id = o.id 
+    WHERE p.category = 'gas' AND date(o.created_at) = date('now') AND o.status != 'cancelled'
+  `);
+
   const topProducts = await db.execute(`
     SELECT p.name, SUM(oi.quantity) as total_sold 
     FROM order_items oi 
@@ -1156,6 +1173,8 @@ app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
   res.json({
     totalOrders: totalOrders.rows[0].count,
     totalRevenue: totalRevenue.rows[0].total || 0,
+    dailyWaterSales: dailyWaterSales.rows[0].count || 0,
+    dailyGasSales: dailyGasSales.rows[0].count || 0,
     topProducts: topProducts.rows
   });
 });
