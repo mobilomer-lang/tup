@@ -266,6 +266,16 @@ export default function App() {
         </div>
       </header>
 
+      {/* System Closed Banner */}
+      {settings && settings.is_open === 0 && (
+        <div className="bg-red-500 text-white px-6 py-3 text-center text-sm font-bold shadow-md animate-pulse">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+            <X className="w-5 h-5" />
+            <span>Sistem şu anda kapalıdır. Yeni sipariş alınamamaktadır.</span>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="p-6 w-full max-w-7xl mx-auto">
         <AnimatePresence mode="wait">

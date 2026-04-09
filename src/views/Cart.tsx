@@ -291,10 +291,13 @@ export default function Cart({ cart, addresses, settings, onUpdateCart, onOrderS
         </div>
         <button 
           onClick={handleOrder}
-          disabled={loading}
-          className="w-full py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+          disabled={loading || (settings && settings.is_open === 0)}
+          className={cn(
+            "w-full py-4 text-white font-bold rounded-md shadow-lg transition-colors flex items-center justify-center gap-2",
+            (settings && settings.is_open === 0) ? "bg-slate-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          )}
         >
-          {loading ? "Sipariş Alınıyor..." : "Siparişi Tamamla"}
+          {loading ? "Sipariş Alınıyor..." : (settings && settings.is_open === 0) ? "Sistem Kapalı" : "Siparişi Tamamla"}
         </button>
       </div>
       

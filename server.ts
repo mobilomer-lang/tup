@@ -84,6 +84,11 @@ async function initDb() {
     await db.execute("ALTER TABLE settings ADD COLUMN logo_url TEXT");
   } catch (e) {}
 
+  // Migration: Ensure is_open exists in settings
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN is_open BOOLEAN DEFAULT 1");
+  } catch (e) {}
+
   // Initialize settings if empty
   const settingsCheck = await db.execute("SELECT COUNT(*) as count FROM settings");
   if (Number(settingsCheck.rows[0].count) === 0) {
@@ -445,15 +450,22 @@ app.get("/api/orders/:id", authenticateToken, async (req: any, res) => {
 app.post("/api/orders", authenticateToken, async (req: any, res) => {
   const { items, total_price, address_id, payment_method, has_empty_damacana, has_empty_tup } = req.body;
   
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: "Sepetiniz boş olamaz" });
-  }
-
-  if (!address_id) {
-    return res.status(400).json({ error: "Lütfen bir adres seçin" });
-  }
-
   try {
+    // Check if system is open
+    const settingsResult = await db.execute("SELECT is_open FROM settings LIMIT 1");
+    const settings = settingsResult.rows[0];
+    if (settings && settings.is_open === 0) {
+      return res.status(400).json({ error: "Sistem şu anda kapalıdır. Lütfen daha sonra tekrar deneyiniz." });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "Sepetiniz boş olamaz" });
+    }
+
+    if (!address_id) {
+      return res.status(400).json({ error: "Lütfen bir adres seçin" });
+    }
+
     const result = await db.execute({
       sql: "INSERT INTO orders (user_id, total_price, address_id, payment_method, has_empty_damacana, has_empty_tup) VALUES (?, ?, ?, ?, ?, ?)",
       args: [req.user.id, total_price ?? 0, address_id, payment_method || 'cash_at_door', has_empty_damacana ? 1 : 0, has_empty_tup ? 1 : 0]
@@ -699,20 +711,21 @@ app.get("/api/settings", async (req, res) => {
 });
 
 app.post("/api/admin/settings", authenticateToken, authorize(["admin", "super_admin"]), async (req, res) => {
-  const { app_name, logo_url, contact_phone, whatsapp_number, whatsapp_message_template } = req.body;
+  const { app_name, logo_url, contact_phone, whatsapp_number, whatsapp_message_template, is_open } = req.body;
   
   // Get current settings first to preserve values if not provided
   const currentResult = await db.execute("SELECT * FROM settings LIMIT 1");
   const current = currentResult.rows[0];
 
   await db.execute({
-    sql: "UPDATE settings SET app_name = ?, logo_url = ?, contact_phone = ?, whatsapp_number = ?, whatsapp_message_template = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM settings LIMIT 1)",
+    sql: "UPDATE settings SET app_name = ?, logo_url = ?, contact_phone = ?, whatsapp_number = ?, whatsapp_message_template = ?, is_open = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM settings LIMIT 1)",
     args: [
       app_name ?? current.app_name ?? 'Su & Tüp', 
       logo_url !== undefined ? logo_url : current.logo_url, 
       contact_phone ?? current.contact_phone ?? '444 42 44',
       whatsapp_number !== undefined ? whatsapp_number : current.whatsapp_number,
-      whatsapp_message_template !== undefined ? whatsapp_message_template : current.whatsapp_message_template
+      whatsapp_message_template !== undefined ? whatsapp_message_template : current.whatsapp_message_template,
+      is_open !== undefined ? (is_open ? 1 : 0) : (current.is_open ?? 1)
     ]
   });
   res.json({ success: true });

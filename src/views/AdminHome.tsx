@@ -842,6 +842,25 @@ function AppSettings({ onUpdate, onShowToast }: { onUpdate: () => void, onShowTo
           />
         </div>
 
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold text-slate-800">Sistem Durumu</p>
+            <p className="text-[10px] text-slate-400 font-medium">Sistemi kapatırsanız yeni sipariş alınamaz.</p>
+          </div>
+          <button 
+            onClick={() => setSettings({ ...settings, is_open: !settings.is_open })}
+            className={cn(
+              "relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none",
+              settings.is_open ? "bg-green-500" : "bg-slate-300"
+            )}
+          >
+            <div className={cn(
+              "absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200",
+              settings.is_open ? "translate-x-6" : "translate-x-0"
+            )} />
+          </button>
+        </div>
+
         <button 
           onClick={handleSave}
           className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg"
