@@ -179,35 +179,41 @@ export default function CustomerHome({ products, addresses, onAddToCart, onRepea
                       className="absolute inset-0 w-full h-full object-cover sm:object-contain z-0"
                     />
                   )}
-                  <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-end z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      {campaign.badge && (
-                        <div className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded border border-white/30">
-                          {campaign.badge}
+                  <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between z-10">
+                    {/* Top Section: Badge and Timer */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          {campaign.badge && (
+                            <div className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded border border-white/30">
+                              {campaign.badge}
+                            </div>
+                          )}
+                          {campaign.type === 'limited' && (
+                            <div className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                              Sınırlı Süre
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {campaign.type === 'limited' && (
-                        <div className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                          Sınırlı Süre
-                        </div>
-                      )}
+                        {campaign.expires_at && <CountdownTimer expiresAt={campaign.expires_at} />}
+                      </div>
                     </div>
                     
-                    <h3 
-                      className="text-xl sm:text-2xl font-black text-white leading-none tracking-tighter mb-1 sm:mb-2 uppercase"
-                      style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}
-                    >
-                      {campaign.title}
-                    </h3>
-                    <p className="text-[10px] sm:text-[11px] font-bold text-white/90 leading-tight max-w-[180px] sm:max-w-[200px]">
-                      {campaign.description}
-                    </p>
-
-                    <div className="mt-2 sm:mt-4 flex items-center justify-between">
-                      {campaign.expires_at && <CountdownTimer expiresAt={campaign.expires_at} />}
-                      <button className="bg-white text-blue-900 text-[9px] sm:text-[10px] font-black px-3 sm:px-4 py-1 sm:py-1.5 rounded-full shadow-sm">
-                        İNCELE
-                      </button>
+                    {/* Bottom Section: Title and Description in two lines */}
+                    <div className="flex flex-col gap-1.5 items-start">
+                      <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg w-fit">
+                        <h3 
+                          className="text-sm sm:text-base font-black text-white leading-tight tracking-tighter uppercase"
+                          style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}
+                        >
+                          {campaign.title}
+                        </h3>
+                      </div>
+                      <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg w-fit">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-white/90 leading-tight">
+                          {campaign.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
