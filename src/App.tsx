@@ -232,7 +232,7 @@ export default function App() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50"
           >
-            <Auth onLogin={handleLogin} onClose={() => setShowAuth(false)} />
+            <Auth onLogin={handleLogin} onClose={() => setShowAuth(false)} settings={settings} />
           </motion.div>
         )}
       </AnimatePresence>
