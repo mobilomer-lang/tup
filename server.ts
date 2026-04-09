@@ -1349,6 +1349,9 @@ app.get("/api/pwa/icon/:size", async (req, res) => {
         const response = await fetch(logoUrl);
         const arrayBuffer = await response.arrayBuffer();
         imageBuffer = Buffer.from(arrayBuffer);
+      } else if (logoUrl.startsWith('data:image')) {
+        const base64Data = logoUrl.split(',')[1];
+        imageBuffer = Buffer.from(base64Data, 'base64');
       } else if (logoUrl.startsWith('/uploads/')) {
         const filePath = path.join(process.cwd(), logoUrl);
         if (fs.existsSync(filePath)) {
