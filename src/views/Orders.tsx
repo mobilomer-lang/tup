@@ -12,7 +12,7 @@ export default function Orders({ user, onShowToast }: { user: User, onShowToast?
   const [loading, setLoading] = useState(true);
   const [showTracking, setShowTracking] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [adminFilter, setAdminFilter] = useState<'all' | 'active' | 'delivered'>('all');
+  const [adminFilter, setAdminFilter] = useState<'all' | 'active' | 'delivered' | 'cancelled'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const itemsPerPage = 20;
@@ -54,6 +54,8 @@ export default function Orders({ user, onShowToast }: { user: User, onShowToast?
         result = result.filter(o => ['pending', 'accepted', 'on_the_way'].includes(o.status));
       } else if (adminFilter === 'delivered') {
         result = result.filter(o => o.status === 'delivered');
+      } else if (adminFilter === 'cancelled') {
+        result = result.filter(o => o.status === 'cancelled');
       }
 
       // Sort: Active first (pending > accepted > on_the_way), then delivered, then cancelled
@@ -188,6 +190,12 @@ export default function Orders({ user, onShowToast }: { user: User, onShowToast?
                     className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-all", adminFilter === 'delivered' ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-50")}
                   >
                     Teslim Edildi
+                  </button>
+                  <button 
+                    onClick={() => { setAdminFilter('cancelled'); setCurrentPage(1); }}
+                    className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-all", adminFilter === 'cancelled' ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-50")}
+                  >
+                    İptal Edilenler
                   </button>
                 </div>
               )}
